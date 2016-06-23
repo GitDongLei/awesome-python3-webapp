@@ -75,7 +75,7 @@ async def response_factory(app,handler):
                 return web.HTTPFound(r[9:])
             resp = web.Response(body=r.encode('utf-8'))
             resp.content_type = 'text/html;charset=utf-8'
-        return resp
+            return resp
         if isinstance(r, dict):
             template = r.get('__template__')
             if template is None:
@@ -113,7 +113,7 @@ def datetime_filter(t):
     return u'%s年%s月%s日' % (dt.year, dt.month, dt.day)
 
 async def init(loop):
-    await orm.create_pool(loop=loop, host='127.0.0.1', port=3306, user='root',password='password', db = 'awesome')
+    await orm.create_pool(loop=loop, host='127.0.0.1', port=3306, user='root',password='password', database = 'awesome')
     app = web.Application(loop=loop, middlewares=[logger_factory, response_factory])
     init_jinja2(app, filters=dict(datetime=datetime_filter))
     add_routes(app, 'handlers')
@@ -127,17 +127,4 @@ loop.run_until_complete(init(loop))
 loop.run_forever()
 
 
-def index(request):
-    return web.Response(body=b'<h1>Awesome</h1>')
 
-async def init(loop):
-    app = web.Application(loop=loop)
-    app.router.add_route('GET','/',index)
-    srv = await loop.create_server(app.make_handler(), '127.0.0.1',9000)
-    logging.info('server started at http://127.0.0.1:9000...')
-    return srv
-
-
-loop = asyncio.get_event_loop()
-loop.run_until_complete(init(loop))
-loop.run_forever()

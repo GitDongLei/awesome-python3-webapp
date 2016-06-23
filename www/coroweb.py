@@ -41,7 +41,7 @@ def post(path):
 def get_required_kw_args(fn):
     args = []
     params = inspect.signature(fn).parameters
-    for name, param in params.intems():
+    for name, param in params.items():
         if param.kind == inspect.Parameter.KEYWORD_ONLY and param.default == inspect.Parameter.empty:
             args.append(name)
     return tuple(args)
@@ -64,7 +64,7 @@ def has_var_kw_arg(fn):
     params = inspect.signature(fn).parameters
     for name, param in params.items():
         if param.kind == inspect.Parameter.VAR_KEYWORD:
-            return Ture
+            return True
 
 def has_request_arg(fn):
     sig = inspect.signature(fn)
@@ -91,11 +91,11 @@ class RequestHandler(object):
     
     async def __call__(self,request):
         kw = None
-        if self._has_var_kw_arg or self._has_named_kw_args or self._reauired_kw_args:
+        if self._has_var_kw_arg or self._has_named_kw_args or self._required_kw_args:
             if request.method == 'POST':
                 if not request.content_type:
                     return web.HTTPBadRequest('Missing Content-Type.')
-                ct = request.content_type_.lower()
+                ct = request.content_type.lower()
                 if ct.startswith('application/json'):
                     params = await request.json()
                     if not isinstance(params, dict):
@@ -139,10 +139,10 @@ class RequestHandler(object):
             r = await self._func(**kw)
             return r 
         except APIError as e:
-            return dic(error=e.error, data =e.data, message=e.message)
+            return dict(error=e.error, data =e.data, message=e.message)
 
 def add_static(app):
-    path = os.path.join(os.path.diranme(os.path.abspath(__file__)), 'static')
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
     app.router.add_static('/static/', path)
     logging.info('add static %s => %s' % ('/static/',path))
 
@@ -158,6 +158,7 @@ def add_route(app, fn):
 
             
 def add_routes(app, module_name):
+    logging.info('adding routes...')
     n= module_name.rfind('.')
     if n == (-1):
         mod = __import__(module_name, globals(), locals())
@@ -169,8 +170,10 @@ def add_routes(app, module_name):
             continue
         fn = getattr(mod, attr)
         if callable(fn):
+            logging.info('fn is callable....')
             method = getattr(fn, '__method__', None)
             path = getattr(fn, '__route__', None)
             if method and path:
+                logging.info('pre add route....')
                 add_route(app, fn)
 
