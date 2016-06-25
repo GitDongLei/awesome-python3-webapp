@@ -16,7 +16,7 @@ from coroweb import get, post
 
 from models import User, Comment, Blog, next_id
 
-from apis import APIError, APIValueError
+from apis import Page, APIError, APIValueError
 
 from config import configs
 
